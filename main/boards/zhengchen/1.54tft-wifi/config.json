@@ -5,7 +5,10 @@
     "builds": [
         {
             "name": "zhengchen-1.54tft-wifi",
-            "sdkconfig_append": []
+            "sdkconfig_append": [
+                "CONFIG_USE_AUDIO_PROCESSOR=y",
+                "CONFIG_USE_DEVICE_AEC=y"
+            ]
         }
     ]
 }

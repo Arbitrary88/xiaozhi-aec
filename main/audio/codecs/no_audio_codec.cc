@@ -1,6 +1,8 @@
 #include "no_audio_codec.h"
 
 #include <esp_log.h>
+#include <esp_timer.h>
+#include <algorithm>
 #include <cmath>
 #include <cstdint>
 #include <cstring>
@@ -80,6 +82,13 @@ NoAudioCodecSimplex::NoAudioCodecSimplex(int input_sample_rate, int output_sampl
     duplex_ = false;
     input_sample_rate_ = input_sample_rate;
     output_sample_rate_ = output_sample_rate;
+#if CONFIG_USE_DEVICE_AEC
+    input_reference_ = true;
+    input_channels_ = 2;
+    time_us_write_ = 0;
+    time_us_read_ = 0;
+    slice_index_ = 0;
+#endif
 
     // Create a new channel for speaker
     i2s_chan_config_t chan_cfg = {
@@ -149,6 +158,13 @@ NoAudioCodecSimplex::NoAudioCodecSimplex(int input_sample_rate, int output_sampl
     duplex_ = false;
     input_sample_rate_ = input_sample_rate;
     output_sample_rate_ = output_sample_rate;
+#if CONFIG_USE_DEVICE_AEC
+    input_reference_ = true;
+    input_channels_ = 2;
+    time_us_write_ = 0;
+    time_us_read_ = 0;
+    slice_index_ = 0;
+#endif
 
     // Create a new channel for speaker
     i2s_chan_config_t chan_cfg = {
@@ -222,6 +238,43 @@ int NoAudioCodec::Write(const int16_t* data, int samples) {
     // output_volume_: 0-100
     // volume_factor_: 0-65536
     int32_t volume_factor = pow(double(output_volume_) / 100.0, 2) * 65536;
+
+#if CONFIG_USE_DEVICE_AEC
+    if (input_reference_) {
+        const int32_t play_size = 512;
+        std::unique_lock<std::mutex> lk(mutex_);
+        if (output_buffer_.size() < play_size * 10) {
+            output_buffer_.resize(play_size * 10, 0);
+            slice_index_ = 0;
+        }
+
+        for (int i = 0; i < samples; i++) {
+            int64_t temp = int64_t(data[i]) * volume_factor;
+            if (temp > INT32_MAX) {
+                buffer[i] = INT32_MAX;
+            } else if (temp < INT32_MIN) {
+                buffer[i] = INT32_MIN;
+            } else {
+                buffer[i] = static_cast<int32_t>(temp);
+            }
+            output_buffer_[slice_index_] = data[i];
+            slice_index_++;
+            if (slice_index_ >= play_size * 10) slice_index_ = 0;
+        }
+        time_us_write_ = esp_timer_get_time();
+    } else {
+        for (int i = 0; i < samples; i++) {
+            int64_t temp = int64_t(data[i]) * volume_factor;
+            if (temp > INT32_MAX) {
+                buffer[i] = INT32_MAX;
+            } else if (temp < INT32_MIN) {
+                buffer[i] = INT32_MIN;
+            } else {
+                buffer[i] = static_cast<int32_t>(temp);
+            }
+        }
+    }
+#else
     for (int i = 0; i < samples; i++) {
         int64_t temp = int64_t(data[i]) * volume_factor; // 使用 int64_t 进行乘法运算
         if (temp > INT32_MAX) {
@@ -232,6 +285,7 @@ int NoAudioCodec::Write(const int16_t* data, int samples) {
             buffer[i] = static_cast<int32_t>(temp);
         }
     }
+#endif
 
     size_t bytes_written;
     ESP_ERROR_CHECK(i2s_channel_write(tx_handle_, buffer.data(), samples * sizeof(int32_t), &bytes_written, portMAX_DELAY));
@@ -239,6 +293,59 @@ int NoAudioCodec::Write(const int16_t* data, int samples) {
 }
 
 int NoAudioCodec::Read(int16_t* dest, int samples) {
+#if CONFIG_USE_DEVICE_AEC
+    if (input_reference_) {
+        static int32_t i_index = 0;
+        static bool first_speak = true;
+        const int32_t play_size = 512;
+
+        {
+            std::unique_lock<std::mutex> lk(mutex_);
+            time_us_read_ = esp_timer_get_time();
+            if (time_us_read_ - time_us_write_ > 1000 * 100) { // 100ms
+                std::fill(output_buffer_.begin(), output_buffer_.end(), 0);
+                first_speak = true;
+                slice_index_ = 0;
+                i_index = play_size * 10 - 512;
+            } else {
+                if (first_speak) {
+                    first_speak = false;
+                    i_index = 0;
+                }
+            }
+            if (i_index < 0) i_index = play_size * 10 + i_index;
+        }
+
+        size_t bytes_read;
+        std::vector<int32_t> bit32_buffer(samples / 2);
+        constexpr uint32_t kReadTimeoutMs = 200;
+        if (i2s_channel_read(rx_handle_, bit32_buffer.data(), (samples / 2) * sizeof(int32_t), &bytes_read, kReadTimeoutMs) != ESP_OK) {
+            ESP_LOGE(TAG, "Read Failed!");
+            return 0;
+        }
+
+        int read_samples = bytes_read / sizeof(int32_t);
+        for (int i = 0; i < read_samples; i++) {
+#if CONFIG_USE_REALTIME_CHAT
+            int32_t value = bit32_buffer[i] >> 8;
+            int64_t temp = int64_t(value) / 256;
+            dest[i * 2] = (temp > INT16_MAX) ? INT16_MAX : (temp < -INT16_MAX) ? -INT16_MAX : (int16_t)temp;
+#else
+            int32_t value = bit32_buffer[i] >> 12;
+            dest[i * 2] = (value > INT16_MAX) ? INT16_MAX : (value < -INT16_MAX) ? -INT16_MAX : (int16_t)value;
+#endif
+            if (output_buffer_.size() > i_index) {
+                dest[i * 2 + 1] = output_buffer_[i_index];
+            } else {
+                dest[i * 2 + 1] = 0;
+            }
+            i_index++;
+            if (i_index >= play_size * 10) i_index = i_index - play_size * 10;
+        }
+        return read_samples * 2;
+    }
+#endif
+
     size_t bytes_read;
     constexpr uint32_t kReadTimeoutMs = 200;
 
