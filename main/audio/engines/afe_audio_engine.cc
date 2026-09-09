@@ -134,7 +134,7 @@ bool AfeAudioEngine::Initialize(AudioCodec* codec, int frame_duration_ms, srmode
 
     afe_config->aec_init = codec_->input_reference();
     afe_config->aec_mode = AEC_MODE_VOIP_HIGH_PERF;
-    afe_config->aec_nlp_level = AEC_NLP_LEVEL_VERYAGGR;
+    afe_config->aec_nlp_level = AEC_NLP_LEVEL_AGGR;
     afe_config->ns_init = false;
     afe_config->vad_init = kUseAfeForVoiceProcessing;
     afe_config->vad_mode = VAD_MODE_0;
@@ -404,6 +404,7 @@ void AfeAudioEngine::HandleWakeWordResult(const afe_fetch_result_t* result) {
     }
 
     last_detected_wake_word_ = wake_words_[model_index];
+    ESP_LOGI(TAG, "WakeNet detected: %s", last_detected_wake_word_.c_str());
     xEventGroupClearBits(event_group_, kWakeWordEnabled);
     // UpdateActiveState marks the AFE controls dirty; the next loop iteration
     // of ProcessingTask disables WakeNet via ApplyAfeControls.
