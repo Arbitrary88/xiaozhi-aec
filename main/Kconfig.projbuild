@@ -935,6 +935,14 @@ config WAKE_WORD_DETECTION_IN_LISTENING
         which allows interrupting the current conversation.
         When disabled (default), wake word detection is turned off during listening.
 
+config USE_WAKE_WORD_INTERRUPT_ONLY
+    bool "Only interrupt speaking on wake word"
+    default n
+    depends on USE_AFE_WAKE_WORD || USE_CUSTOM_WAKE_WORD
+    help
+        When enabled, voice processing to server is disabled during speaking,
+        and only local wake word detection can interrupt speaking.
+
 config USE_AUDIO_PROCESSOR
     bool "Enable AFE Audio Processing"
     default y

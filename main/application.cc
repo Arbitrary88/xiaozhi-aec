@@ -1024,11 +1024,17 @@ void Application::HandleStateChangedEvent() {
         case kDeviceStateSpeaking:
             display->SetStatus(Lang::Strings::SPEAKING);
 
+#if CONFIG_USE_WAKE_WORD_INTERRUPT_ONLY
+            audio_service_.EnableVoiceProcessing(false);
+            // Only AFE wake word can be detected in speaking mode
+            audio_service_.EnableWakeWordDetection(audio_service_.IsAfeWakeWord());
+#else
             if (listening_mode_ != kListeningModeRealtime) {
                 audio_service_.EnableVoiceProcessing(false);
                 // Only AFE wake word can be detected in speaking mode
                 audio_service_.EnableWakeWordDetection(audio_service_.IsAfeWakeWord());
             }
+#endif
             audio_service_.ResetDecoder();
             break;
         case kDeviceStateNotifying:
@@ -1153,6 +1159,7 @@ void Application::Schedule(std::function<void()>&& callback) {
 void Application::AbortSpeaking(AbortReason reason) {
     ESP_LOGI(TAG, "Abort speaking");
     aborted_ = true;
+    audio_service_.ResetDecoder();
     if (protocol_) {
         protocol_->SendAbortSpeaking(reason);
     }
@@ -1164,7 +1171,11 @@ void Application::SetListeningMode(ListeningMode mode) {
 }
 
 ListeningMode Application::GetDefaultListeningMode() const {
+#if CONFIG_USE_WAKE_WORD_INTERRUPT_ONLY
+    return kListeningModeAutoStop;
+#else
     return aec_mode_ == kAecOff ? kListeningModeAutoStop : kListeningModeRealtime;
+#endif
 }
 
 void Application::Reboot() {

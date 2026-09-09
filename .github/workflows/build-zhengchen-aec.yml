@@ -7,10 +7,9 @@ on:
       - main
       - master
     paths:
-      - 'main/audio/codecs/no_audio_codec.*'
-      - 'main/boards/zhengchen/**'
-      - 'main/Kconfig.projbuild'
+      - 'main/**'
       - '.github/workflows/build-zhengchen-aec.yml'
+      - 'scripts/**'
 
 permissions:
   contents: read

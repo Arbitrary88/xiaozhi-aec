@@ -7,7 +7,9 @@
             "name": "zhengchen-1.54tft-wifi",
             "sdkconfig_append": [
                 "CONFIG_USE_AUDIO_PROCESSOR=y",
-                "CONFIG_USE_DEVICE_AEC=y"
+                "CONFIG_USE_DEVICE_AEC=y",
+                "CONFIG_USE_WAKE_WORD_INTERRUPT_ONLY=y",
+                "CONFIG_WAKE_WORD_DETECTION_IN_LISTENING=y"
             ]
         }
     ]
