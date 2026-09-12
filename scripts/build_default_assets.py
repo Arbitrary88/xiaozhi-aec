@@ -895,18 +895,26 @@ def main():
         # Determine language from multinet models
         language = get_language_from_multinet_models(multinet_model_names)
         
-        # Build multinet_model info structure
+        # Build multinet_model info structure (supports multiple wake words separated by semicolon)
+        commands_list = []
+        raw_words = custom_wake_word_config['wake_word'].split(';')
+        raw_displays = custom_wake_word_config['display'].split(';')
+        for idx, w in enumerate(raw_words):
+            w = w.strip()
+            if not w:
+                continue
+            d = raw_displays[idx].strip() if idx < len(raw_displays) else raw_displays[0].strip()
+            commands_list.append({
+                "command": w,
+                "text": d,
+                "action": "wake"
+            })
+
         multinet_model_info = {
             "language": language,
             "duration": 3000,  # Default duration in ms
             "threshold": custom_wake_word_config['threshold'],
-            "commands": [
-                {
-                    "command": custom_wake_word_config['wake_word'],
-                    "text": custom_wake_word_config['display'],
-                    "action": "wake"
-                }
-            ]
+            "commands": commands_list
         }
         print(f"  custom wake word: {custom_wake_word_config['wake_word']} ({custom_wake_word_config['display']})")
         print(f"  wake word language: {language}")
