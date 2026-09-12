@@ -1,0 +1,46 @@
+name: Build K08 2.4 TFT AEC
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+      - master
+    paths:
+      - 'main/**'
+      - '.github/workflows/**'
+      - 'scripts/**'
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build K08 2.4 TFT with AEC
+    runs-on: ubuntu-latest
+    container:
+      image: espressif/idf:v6.0.2
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build firmware
+        shell: bash
+        run: |
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+          source $IDF_PATH/export.sh
+          python scripts/build.py k08/2.4tft-wifi --zip
+
+      - name: Upload merged binary
+        uses: actions/upload-artifact@v4
+        with:
+          name: k08-2-4tft-lcd-s3-wifi-aec-bin
+          path: build/merged-binary.bin
+          if-no-files-found: error
+
+      - name: Upload release zip package
+        uses: actions/upload-artifact@v4
+        with:
+          name: k08-2-4tft-lcd-s3-wifi-aec-release-zip
+          path: releases/*.zip
+          if-no-files-found: warn

@@ -22,6 +22,15 @@ private:
     bool pa_inverted_ = false;
     std::mutex data_if_mutex_;
 
+#if CONFIG_USE_DEVICE_AEC
+    std::vector<int16_t> output_buffer_;
+    std::vector<int16_t> mic_buf_;
+    std::mutex aec_mutex_;
+    int32_t slice_index_ = 0;
+    uint64_t time_us_write_ = 0;
+    uint64_t time_us_read_ = 0;
+#endif
+
     void CreateDuplexChannels(gpio_num_t mclk, gpio_num_t bclk, gpio_num_t ws, gpio_num_t dout, gpio_num_t din);
     void ResetCodec();
     void UpdateDeviceState();

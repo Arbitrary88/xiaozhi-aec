@@ -3,6 +3,10 @@
 #include <esp_log.h>
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
+#if CONFIG_USE_DEVICE_AEC
+#include <esp_timer.h>
+#include <algorithm>
+#endif
 
 #define TAG "Es8311AudioCodec"
 
@@ -10,8 +14,16 @@ Es8311AudioCodec::Es8311AudioCodec(void* i2c_master_handle, i2c_port_t i2c_port,
     gpio_num_t mclk, gpio_num_t bclk, gpio_num_t ws, gpio_num_t dout, gpio_num_t din,
     gpio_num_t pa_pin, uint8_t es8311_addr, bool use_mclk, bool pa_inverted) {
     duplex_ = true; // 是否双工
+#if CONFIG_USE_DEVICE_AEC
+    input_reference_ = true; // 是否使用参考输入，实现回声消除
+    input_channels_ = 2; // 输入通道数 (MIC + REF)
+    time_us_write_ = 0;
+    time_us_read_ = 0;
+    slice_index_ = 0;
+#else
     input_reference_ = false; // 是否使用参考输入，实现回声消除
     input_channels_ = 1; // 输入通道数
+#endif
     input_sample_rate_ = input_sample_rate;
     output_sample_rate_ = output_sample_rate;
     pa_pin_ = pa_pin;
@@ -203,14 +215,78 @@ void Es8311AudioCodec::EnableOutput(bool enable) {
 }
 
 int Es8311AudioCodec::Read(int16_t* dest, int samples) {
-    if (input_enabled_) {
+#if CONFIG_USE_DEVICE_AEC
+    if (input_reference_) {
+        static int32_t i_index = 0;
+        static bool first_speak = true;
+        const int32_t play_size = 512;
+
+        {
+            std::unique_lock<std::mutex> lk(aec_mutex_);
+            time_us_read_ = esp_timer_get_time();
+            if (time_us_read_ - time_us_write_ > 1000 * 100) { // 100ms
+                std::fill(output_buffer_.begin(), output_buffer_.end(), 0);
+                first_speak = true;
+                slice_index_ = 0;
+                i_index = play_size * 10 - 512;
+            } else {
+                if (first_speak) {
+                    first_speak = false;
+                    i_index = 0;
+                }
+            }
+            if (i_index < 0) i_index = play_size * 10 + i_index;
+        }
+
+        int mic_samples = samples / 2;
+        if (mic_buf_.size() < (size_t)mic_samples) {
+            mic_buf_.resize(mic_samples, 0);
+        }
+
+        if (input_enabled_ && dev_ != nullptr) {
+            esp_codec_dev_read(dev_, (void*)mic_buf_.data(), mic_samples * sizeof(int16_t));
+        } else {
+            std::fill(mic_buf_.begin(), mic_buf_.begin() + mic_samples, 0);
+        }
+
+        for (int i = 0; i < mic_samples; i++) {
+            dest[i * 2] = mic_buf_[i];
+            if (output_buffer_.size() > (size_t)i_index) {
+                dest[i * 2 + 1] = output_buffer_[i_index];
+            } else {
+                dest[i * 2 + 1] = 0;
+            }
+            i_index++;
+            if (i_index >= play_size * 10) i_index = i_index - play_size * 10;
+        }
+        return samples;
+    }
+#endif
+    if (input_enabled_ && dev_ != nullptr) {
         ESP_ERROR_CHECK_WITHOUT_ABORT(esp_codec_dev_read(dev_, (void*)dest, samples * sizeof(int16_t)));
     }
     return samples;
 }
 
 int Es8311AudioCodec::Write(const int16_t* data, int samples) {
-    if (output_enabled_) {
+#if CONFIG_USE_DEVICE_AEC
+    if (input_reference_) {
+        const int32_t play_size = 512;
+        std::unique_lock<std::mutex> lk(aec_mutex_);
+        if (output_buffer_.size() < (size_t)(play_size * 10)) {
+            output_buffer_.resize(play_size * 10, 0);
+            slice_index_ = 0;
+        }
+
+        for (int i = 0; i < samples; i++) {
+            output_buffer_[slice_index_] = data[i];
+            slice_index_++;
+            if (slice_index_ >= play_size * 10) slice_index_ = 0;
+        }
+        time_us_write_ = esp_timer_get_time();
+    }
+#endif
+    if (output_enabled_ && dev_ != nullptr) {
         ESP_ERROR_CHECK_WITHOUT_ABORT(esp_codec_dev_write(dev_, (void*)data, samples * sizeof(int16_t)));
     }
     return samples;

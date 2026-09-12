@@ -1,0 +1,16 @@
+{
+    "manufacturer": "k08",
+    "type": "k08-2-4tft-lcd-s3-wifi",
+    "target": "esp32s3",
+    "builds": [
+        {
+            "name": "k08-2-4tft-lcd-s3-wifi",
+            "sdkconfig_append": [
+                "CONFIG_USE_AUDIO_PROCESSOR=y",
+                "CONFIG_USE_DEVICE_AEC=y",
+                "CONFIG_USE_WAKE_WORD_INTERRUPT_ONLY=y",
+                "CONFIG_WAKE_WORD_DETECTION_IN_LISTENING=y"
+            ]
+        }
+    ]
+}
