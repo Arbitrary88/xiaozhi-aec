@@ -251,6 +251,12 @@ void AfeAudioEngine::EnableDeviceAec(bool enable) {
     UpdateAecState();
 }
 
+void AfeAudioEngine::SetWakeWordHighSensitivity(bool enable) {
+    if (wake_detector_ == WakeDetector::kMultiNet && custom_wake_word_) {
+        custom_wake_word_->SetHighSensitivityMode(enable);
+    }
+}
+
 bool AfeAudioEngine::HasWakeWord() const {
     return wake_detector_ != WakeDetector::kNone;
 }

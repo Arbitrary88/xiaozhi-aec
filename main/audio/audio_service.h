@@ -131,6 +131,8 @@ public:
     void EnableVoiceProcessing(bool enable);
     void EnableAudioTesting(bool enable);
     void EnableDeviceAec(bool enable);
+    // 动态双阈值：播报时切换到高灵敏打断阈值（8%），待机时恢复正常阈值（12%）
+    void SetWakeWordHighSensitivity(bool enable);
 
     void SetCallbacks(AudioServiceCallbacks& callbacks);
 

@@ -46,6 +46,9 @@ public:
     bool GetWakeWordOpus(std::vector<uint8_t>& opus) override;
     const std::string& GetLastDetectedWakeWord() const override { return last_detected_wake_word_; }
 
+    // 动态双阈值：播报时启用高灵敏打断模式（8%），待机时恢复正常阈值（12%）
+    void SetWakeWordHighSensitivity(bool enable);
+
 private:
     enum class WakeDetector {
         kNone,

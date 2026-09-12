@@ -139,6 +139,18 @@ void CustomWakeWord::OnWakeWordDetected(std::function<void(const std::string& wa
     wake_word_detected_callback_ = callback;
 }
 
+void CustomWakeWord::SetHighSensitivityMode(bool enable) {
+    if (multinet_ == nullptr || multinet_model_data_ == nullptr) {
+        return;
+    }
+    float active_threshold = enable ? barge_in_threshold_ : threshold_;
+    multinet_->set_det_threshold(multinet_model_data_, active_threshold);
+    ESP_LOGI(TAG, "Wake word threshold switched to %.2f%% (%s mode)",
+             active_threshold * 100.0f, enable ? "barge-in" : "idle");
+}
+
+
+
 void CustomWakeWord::Start() {
     running_ = true;
 }

@@ -996,6 +996,8 @@ void Application::HandleStateChangedEvent() {
             display->SetEmotion("neutral");  // Then set emotion (wechat mode checks child count)
             audio_service_.EnableVoiceProcessing(false);
             audio_service_.EnableWakeWordDetection(true);
+            // 待机状态恢复正常（12%）阈值，防止日常聊天误唤醒
+            audio_service_.SetWakeWordHighSensitivity(false);
             break;
         case kDeviceStateConnecting:
             display->SetStatus(Lang::Strings::CONNECTING);
@@ -1005,6 +1007,8 @@ void Application::HandleStateChangedEvent() {
         case kDeviceStateListening:
             display->SetStatus(Lang::Strings::LISTENING);
             display->SetEmotion("neutral");
+            // 进入聆听状态，恢复正常（12%）阈值
+            audio_service_.SetWakeWordHighSensitivity(false);
 
             // Make sure the audio processor is running
             if (play_popup_on_listening_ || !audio_service_.IsAudioProcessorRunning()) {
@@ -1023,6 +1027,8 @@ void Application::HandleStateChangedEvent() {
             break;
         case kDeviceStateSpeaking:
             display->SetStatus(Lang::Strings::SPEAKING);
+            // 进入播报状态，切换到高灵敏打断阈值（8%），用户随时可以打断
+            audio_service_.SetWakeWordHighSensitivity(true);
 
 #if CONFIG_USE_WAKE_WORD_INTERRUPT_ONLY
             audio_service_.EnableVoiceProcessing(false);
@@ -1042,6 +1048,7 @@ void Application::HandleStateChangedEvent() {
             audio_service_.EnableVoiceProcessing(false);
             audio_service_.EnableWakeWordDetection(audio_service_.IsAfeWakeWord());
             break;
+
         case kDeviceStateWifiConfiguring:
             audio_service_.EnableVoiceProcessing(false);
             audio_service_.EnableWakeWordDetection(false);

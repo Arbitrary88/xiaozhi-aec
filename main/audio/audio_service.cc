@@ -736,6 +736,17 @@ void AudioService::EnableDeviceAec(bool enable) {
     }
 }
 
+void AudioService::SetWakeWordHighSensitivity(bool enable) {
+#if CONFIG_IDF_TARGET_ESP32S3 || CONFIG_IDF_TARGET_ESP32P4 || CONFIG_IDF_TARGET_ESP32S31
+    if (audio_engine_initialized_) {
+        auto* afe_engine = static_cast<AfeAudioEngine*>(audio_engine_.get());
+        if (afe_engine) {
+            afe_engine->SetWakeWordHighSensitivity(enable);
+        }
+    }
+#endif
+}
+
 void AudioService::SetCallbacks(AudioServiceCallbacks& callbacks) {
     callbacks_ = callbacks;
 }

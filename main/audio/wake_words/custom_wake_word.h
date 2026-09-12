@@ -36,7 +36,13 @@ public:
     bool GetWakeWordOpus(std::vector<uint8_t>& opus);
     const std::string& GetLastDetectedWakeWord() const { return last_detected_wake_word_; }
 
+    // 动态双阈值：enable=true 时切换到打断灵敏阈值（播报状态），false 时恢复待机阈值
+    void SetHighSensitivityMode(bool enable);
+
 private:
+    // barge_in_threshold_: 播报状态下使用的低阈值（8%），threshold_: 待机状态下使用的高阈值（12%）
+    float barge_in_threshold_ = 0.08f;
+
     struct Command {
         std::string command;
         std::string text;
