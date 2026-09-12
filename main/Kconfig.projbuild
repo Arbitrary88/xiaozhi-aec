@@ -252,6 +252,9 @@ choice BOARD_TYPE
     config BOARD_TYPE_JIUCHUAN
         bool "Jiuchuan ESP32-S3 (九川智能)"
         depends on IDF_TARGET_ESP32S3
+    config BOARD_TYPE_K08_2_4TFT_WIFI
+        bool "K08 2.4-inch TFT Wi-Fi"
+        depends on IDF_TARGET_ESP32S3
     config BOARD_TYPE_KEVIN_BOX_2
         bool "Kevin Box 2"
         depends on IDF_TARGET_ESP32S3
@@ -614,9 +617,6 @@ choice BOARD_TYPE
         depends on IDF_TARGET_ESP32S3
     config BOARD_TYPE_ZHENGCHEN_CAM
         bool "Zhengchen AI Camera Wi-Fi (征辰科技)"
-        depends on IDF_TARGET_ESP32S3
-    config BOARD_TYPE_K08_2_4TFT_WIFI
-        bool "K08 2.4-inch TFT Wi-Fi"
         depends on IDF_TARGET_ESP32S3
 endchoice
 
