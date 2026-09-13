@@ -140,6 +140,7 @@ void CustomWakeWord::OnWakeWordDetected(std::function<void(const std::string& wa
 }
 
 void CustomWakeWord::SetHighSensitivityMode(bool enable) {
+    is_high_sensitivity_ = enable;
     if (multinet_ == nullptr || multinet_model_data_ == nullptr) {
         return;
     }
@@ -148,6 +149,7 @@ void CustomWakeWord::SetHighSensitivityMode(bool enable) {
     ESP_LOGI(TAG, "Wake word threshold switched to %.2f%% (%s mode)",
              active_threshold * 100.0f, enable ? "barge-in" : "idle");
 }
+
 
 
 
@@ -205,6 +207,13 @@ void CustomWakeWord::FeedSamples(const int16_t* data, size_t samples, bool mono)
                         mn_result->command_id[i], mn_result->string, mn_result->prob[i]);
                 auto& command = commands_[mn_result->command_id[i] - 1];
                 if (command.action == "wake") {
+                    float current_thresh = is_high_sensitivity_ ? barge_in_threshold_ : threshold_;
+                    if (mn_result->prob[i] < current_thresh) {
+                        ESP_LOGW(TAG, "Custom wake word rejected by threshold check: prob=%f < required=%.2f%% (mode: %s)",
+                                 mn_result->prob[i], current_thresh * 100.0f, is_high_sensitivity_ ? "barge-in" : "idle");
+                        continue;
+                    }
+
                     last_detected_wake_word_ = command.text;
                     running_ = false;
                     input_buffer_.clear();

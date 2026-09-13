@@ -1027,7 +1027,7 @@ void Application::HandleStateChangedEvent() {
             break;
         case kDeviceStateSpeaking:
             display->SetStatus(Lang::Strings::SPEAKING);
-            // 进入播报状态，切换到高灵敏打断阈值（8%），用户随时可以打断
+            // 进入播报状态，切换到高灵敏打断阈值（10%），用户随时可以打断
             audio_service_.SetWakeWordHighSensitivity(true);
 
 #if CONFIG_USE_WAKE_WORD_INTERRUPT_ONLY
