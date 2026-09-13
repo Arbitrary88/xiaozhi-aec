@@ -9,7 +9,7 @@
                 "CONFIG_USE_AUDIO_PROCESSOR=y",
                 "CONFIG_USE_DEVICE_AEC=y",
                 "CONFIG_USE_WAKE_WORD_INTERRUPT_ONLY=y",
-                "CONFIG_WAKE_WORD_DETECTION_IN_LISTENING=y",
+                "CONFIG_WAKE_WORD_DETECTION_IN_LISTENING=n",
                 "CONFIG_USE_CUSTOM_WAKE_WORD=y",
                 "CONFIG_USE_AFE_WAKE_WORD=n",
                 "CONFIG_CUSTOM_WAKE_WORD=\"ni hao xiao niu;xiao niu xiao niu;xiao niu ni hao\"",

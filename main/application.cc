@@ -892,23 +892,15 @@ void Application::HandleWakeWordDetectedEvent() {
     } else if (state == kDeviceStateNotifying) {
         StopNotification();
         BeginWakeWordInvoke(wake_word);
-    } else if (state == kDeviceStateSpeaking || state == kDeviceStateListening) {
+    } else if (state == kDeviceStateSpeaking) {
         AbortSpeaking(kAbortReasonWakeWordDetected);
         // Clear send queue to avoid sending residues to server
         while (audio_service_.PopPacketFromSendQueue())
             ;
 
-        if (state == kDeviceStateListening) {
-            protocol_->SendStartListening(GetDefaultListeningMode());
-            audio_service_.ResetDecoder();
-            audio_service_.PlaySound(Lang::Sounds::OGG_POPUP);
-            // Re-enable wake word detection as it was stopped by the detection itself
-            audio_service_.EnableWakeWordDetection(true);
-        } else {
-            // Play popup sound and start listening again
-            play_popup_on_listening_ = true;
-            SetListeningMode(GetDefaultListeningMode());
-        }
+        // Play popup sound and start listening again
+        play_popup_on_listening_ = true;
+        SetListeningMode(GetDefaultListeningMode());
     } else if (state == kDeviceStateActivating) {
         // Restart the activation check if the wake word is detected during activation
         SetDeviceState(kDeviceStateIdle);
@@ -1080,14 +1072,10 @@ void Application::StartListeningAudio() {
 }
 
 void Application::ConfigureWakeWordForListening() {
-#ifdef CONFIG_WAKE_WORD_DETECTION_IN_LISTENING
-    // Enable wake word detection in listening mode (configured via Kconfig)
-    audio_service_.EnableWakeWordDetection(audio_service_.IsAfeWakeWord());
-#else
-    // Disable wake word detection in listening mode
+    // Disable wake word detection in listening mode to prevent swallowing user speech
     audio_service_.EnableWakeWordDetection(false);
-#endif
 }
+
 
 void Application::StartNotification(std::string audio_url, std::vector<NotifySubtitle> subtitles) {
     if (GetDeviceState() != kDeviceStateIdle || notify_player_.IsBusy()) {
