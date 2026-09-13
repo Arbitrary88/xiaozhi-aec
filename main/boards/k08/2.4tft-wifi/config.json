@@ -14,7 +14,7 @@
                 "CONFIG_USE_AFE_WAKE_WORD=n",
                 "CONFIG_CUSTOM_WAKE_WORD=\"ni hao xiao niu;xiao niu xiao niu;xiao niu ni hao\"",
                 "CONFIG_CUSTOM_WAKE_WORD_DISPLAY=\"你好小牛;小牛小牛;小牛你好\"",
-                "CONFIG_CUSTOM_WAKE_WORD_THRESHOLD=12",
+                "CONFIG_CUSTOM_WAKE_WORD_THRESHOLD=18",
                 "CONFIG_SR_MN_CN_MULTINET6_QUANT=y"
             ]
         }

@@ -40,7 +40,7 @@ public:
     void SetHighSensitivityMode(bool enable);
 
 private:
-    // barge_in_threshold_: 播报状态下使用的打断阈值（10%），threshold_: 待机状态下使用的高阈值（12%）
+    // barge_in_threshold_: 播报状态下使用的打断阈值（10%），threshold_: 待机状态下使用的高阈值（18%）
     float barge_in_threshold_ = 0.10f;
     bool is_high_sensitivity_ = false;
 
