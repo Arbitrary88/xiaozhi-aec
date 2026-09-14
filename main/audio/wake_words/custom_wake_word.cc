@@ -118,7 +118,7 @@ bool CustomWakeWord::Initialize(AudioCodec* codec, srmodel_list_t* models_list) 
 
     multinet_ = esp_mn_handle_from_name(mn_name_);
     multinet_model_data_ = multinet_->create(mn_name_, duration_);
-    multinet_->set_det_threshold(multinet_model_data_, threshold_);
+    multinet_->set_det_threshold(multinet_model_data_, 0.20f);
     input_buffer_.reserve(multinet_->get_samp_chunksize(multinet_model_data_));
     esp_mn_commands_clear();
     for (int i = 0; i < commands_.size(); i++) {
@@ -145,7 +145,7 @@ void CustomWakeWord::SetHighSensitivityMode(bool enable) {
         return;
     }
     float active_threshold = enable ? barge_in_threshold_ : threshold_;
-    multinet_->set_det_threshold(multinet_model_data_, active_threshold);
+    multinet_->set_det_threshold(multinet_model_data_, 0.20f);
     ESP_LOGI(TAG, "Wake word threshold switched to %.2f%% (%s mode)",
              active_threshold * 100.0f, enable ? "barge-in" : "idle");
 }
