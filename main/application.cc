@@ -1289,7 +1289,12 @@ void Application::WakeWordInvoke(const std::string& wake_word) {
             }
         });
     } else if (state == kDeviceStateSpeaking) {
-        Schedule([this]() { AbortSpeaking(kAbortReasonNone); });
+        Schedule([this, wake_word]() {
+            AbortSpeaking(kAbortReasonWakeWordDetected);
+            // 打断播报后进入聆听，和 Idle 下唤醒行为一致
+            play_popup_on_listening_ = true;
+            SetListeningMode(GetDefaultListeningMode());
+        });
     } else if (state == kDeviceStateListening) {
         // 已经在聆听状态下，不关闭通道，避免意外打断用户说话
         return;
