@@ -1,0 +1,54 @@
+name: Build WHA103-XIAOZHUI Firmware
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+      - master
+      - aec-1.54
+    paths:
+      - 'main/**'
+      - '.github/workflows/build-wha103.yml'
+      - 'scripts/**'
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build WHA103-XIAOZHUI (ESP32-C3)
+    runs-on: ubuntu-latest
+    container:
+      image: espressif/idf:v6.0.2
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build firmware
+        shell: bash
+        run: |
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+          source $IDF_PATH/export.sh
+          python scripts/build.py wha/wha103 --zip
+
+      - name: Upload merged binary (0x0 full flash)
+        uses: actions/upload-artifact@v4
+        with:
+          name: wha103-xiaozhui-merged-bin
+          path: build/merged-binary.bin
+          if-no-files-found: error
+
+      - name: Upload app binary (0x20000 OTA partition)
+        uses: actions/upload-artifact@v4
+        with:
+          name: wha103-xiaozhui-app-bin
+          path: build/xiaozhi.bin
+          if-no-files-found: error
+
+      - name: Upload release zip package
+        uses: actions/upload-artifact@v4
+        with:
+          name: wha103-xiaozhui-release-zip
+          path: releases/*.zip
+          if-no-files-found: warn

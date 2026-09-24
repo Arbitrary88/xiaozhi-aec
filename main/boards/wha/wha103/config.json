@@ -1,0 +1,16 @@
+{
+    "manufacturer": "wha",
+    "type": "wha103-xiaozhui",
+    "target": "esp32c3",
+    "builds": [
+        {
+            "name": "wha103-xiaozhui",
+            "sdkconfig_append": [
+                "CONFIG_ESPTOOLPY_FLASHSIZE_16MB=y",
+                "CONFIG_PARTITION_TABLE_CUSTOM_FILENAME=\"partitions/v2/16m_c3.csv\"",
+                "CONFIG_FLASH_NONE_ASSETS=y",
+                "CONFIG_ESP_CONSOLE_USB_SERIAL_JTAG=y"
+            ]
+        }
+    ]
+}
