@@ -213,6 +213,12 @@ void Application::Run() {
             if (audio_service_.IsPlaybackIdle()) {
                 notify_player_.OnPlaybackDrained();
             }
+            if (pending_speaking_to_idle_ && GetDeviceState() == kDeviceStateSpeaking &&
+                audio_service_.IsPlaybackIdle()) {
+                pending_speaking_to_idle_ = false;
+                audio_service_.PlaySound(Lang::Sounds::OGG_POPUP);
+                SetDeviceState(kDeviceStateIdle);
+            }
             // Deferred listening start (auto mode): the playback queue has
             // drained, so it is now safe to enable voice processing.
             if (pending_listening_start_ && GetDeviceState() == kDeviceStateListening &&
@@ -619,9 +625,14 @@ void Application::InitializeProtocol() {
                 Schedule([this]() {
                     if (GetDeviceState() == kDeviceStateSpeaking) {
                         if (listening_mode_ == kListeningModeManualStop) {
-                            SetDeviceState(kDeviceStateIdle);
+                            if (audio_service_.IsPlaybackIdle()) {
+                                audio_service_.PlaySound(Lang::Sounds::OGG_POPUP);
+                                SetDeviceState(kDeviceStateIdle);
+                            } else {
+                                pending_speaking_to_idle_ = true;
+                            }
                         } else {
-                            SetDeviceState(kDeviceStateListening);
+                            SetListeningMode(kListeningModeAutoStop);
                         }
                     }
                 });
@@ -982,6 +993,7 @@ void Application::HandleStateChangedEvent() {
     // Any state change invalidates a pending deferred listening start;
     // the Listening case below re-arms it when needed.
     pending_listening_start_ = false;
+    pending_speaking_to_idle_ = false;
 
     auto& board = Board::GetInstance();
     auto display = board.GetDisplay();
@@ -1167,6 +1179,7 @@ void Application::AbortSpeaking(AbortReason reason) {
 
 void Application::SetListeningMode(ListeningMode mode) {
     listening_mode_ = mode;
+    play_popup_on_listening_ = true;
     SetDeviceState(kDeviceStateListening);
 }
 

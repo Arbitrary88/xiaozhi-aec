@@ -1,7 +1,7 @@
 #include "wifi_board.h"
 #include "codecs/es8311_audio_codec.h"
 #include "display/display.h"
-#include "led/led.h"
+#include "led/single_led.h"
 #include "application.h"
 #include "button.h"
 #include "config.h"
@@ -49,10 +49,10 @@ private:
         };
         ESP_ERROR_CHECK(i2c_new_master_bus(&i2c_bus_cfg, &codec_i2c_bus_));
 
-        if (i2c_master_probe(codec_i2c_bus_, AUDIO_CODEC_ES8311_ADDR, 1000) != ESP_OK) {
-            ESP_LOGE(TAG, "Failed to probe ES8311 I2C device at 0x%02x", AUDIO_CODEC_ES8311_ADDR);
+        if (i2c_master_probe(codec_i2c_bus_, 0x18, 1000) != ESP_OK) {
+            ESP_LOGE(TAG, "Failed to probe ES8311 I2C device at 0x18");
         } else {
-            ESP_LOGI(TAG, "ES8311 I2C device detected at 0x%02x", AUDIO_CODEC_ES8311_ADDR);
+            ESP_LOGI(TAG, "ES8311 I2C device detected at 0x18");
         }
     }
 
@@ -150,8 +150,8 @@ public:
     }
 
     virtual Led* GetLed() override {
-        static NoLed no_led;
-        return &no_led;
+        static SingleLed led(BUILTIN_LED_GPIO);
+        return &led;
     }
 
     virtual Display* GetDisplay() override {
