@@ -1291,11 +1291,8 @@ void Application::WakeWordInvoke(const std::string& wake_word) {
     } else if (state == kDeviceStateSpeaking) {
         Schedule([this]() { AbortSpeaking(kAbortReasonNone); });
     } else if (state == kDeviceStateListening) {
-        Schedule([this]() {
-            if (protocol_) {
-                protocol_->CloseAudioChannel();
-            }
-        });
+        // 已经在聆听状态下，不关闭通道，避免意外打断用户说话
+        return;
     }
 }
 

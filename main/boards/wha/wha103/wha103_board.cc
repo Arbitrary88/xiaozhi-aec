@@ -124,8 +124,17 @@ private:
     void InitializeYt2228() {
         yt2228_ = new Yt2228(YT2228_UART_NUM, YT2228_TX_PIN, YT2228_RX_PIN, YT2228_BAUD_RATE);
         yt2228_->OnWake([this]() {
-            ESP_LOGI(TAG, "YT2228 离线唤醒词触发");
-            Application::GetInstance().WakeWordInvoke("xiaozhi");
+            auto& app = Application::GetInstance();
+            auto state = app.GetDeviceState();
+            ESP_LOGI(TAG, "YT2228 离线唤醒词触发, 当前状态: %d", (int)state);
+
+            if (state == kDeviceStateListening || state == kDeviceStateConnecting) {
+                // 方案 A：当前已在连接/聆听录音中，忽略硬件唤醒打断，确保用户带唤醒词说话时不会被强行挂断
+                ESP_LOGI(TAG, "当前处于连接/聆听状态，忽略唤醒打断，继续正常流式录音");
+                return;
+            }
+
+            app.WakeWordInvoke("xiaozhi");
         });
         yt2228_->OnModeChanged([this](bool bluetooth_mode) {
             ESP_LOGI(TAG, "YT2228 模式变化: %s", bluetooth_mode ? "蓝牙模式" : "AI模式");
