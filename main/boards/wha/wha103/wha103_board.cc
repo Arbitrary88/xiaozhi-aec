@@ -109,10 +109,10 @@ private:
                 StopManualListeningGuardTimer();
                 app.StopListening();
             } else if (state == kDeviceStateSpeaking) {
-                // AI播报中按下：立即打断说话
-                ESP_LOGI(TAG, "按键操作: 打断AI播报");
-                StopManualListeningGuardTimer();
-                app.ToggleChatState();
+                // AI播报中按下：打断AI播报并开启手动聆听 (manual 模式)
+                ESP_LOGI(TAG, "按键操作: 打断AI播报并开启手动聆听 (manual 模式)");
+                app.StartListening();
+                StartManualListeningGuardTimer();
             } else if (state == kDeviceStateConnecting || state == kDeviceStateNotifying) {
                 // 连接或通知状态下按下：重置或打断
                 StopManualListeningGuardTimer();
