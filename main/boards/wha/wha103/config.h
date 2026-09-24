@@ -3,6 +3,7 @@
 
 #include <driver/gpio.h>
 #include <driver/uart.h>
+#include <esp_codec_dev_defaults.h>
 
 #define AUDIO_INPUT_SAMPLE_RATE  24000
 #define AUDIO_OUTPUT_SAMPLE_RATE 24000
@@ -14,9 +15,9 @@
 #define AUDIO_I2S_GPIO_DIN  GPIO_NUM_7
 
 #define AUDIO_CODEC_PA_PIN       GPIO_NUM_13
-#define AUDIO_CODEC_I2C_SDA_PIN  GPIO_NUM_4
-#define AUDIO_CODEC_I2C_SCL_PIN  GPIO_NUM_3
-#define AUDIO_CODEC_ES8311_ADDR  0x18
+#define AUDIO_CODEC_I2C_SDA_PIN  GPIO_NUM_3
+#define AUDIO_CODEC_I2C_SCL_PIN  GPIO_NUM_4
+#define AUDIO_CODEC_ES8311_ADDR  ES8311_CODEC_DEFAULT_ADDR
 
 #define BOOT_BUTTON_GPIO        GPIO_NUM_9
 

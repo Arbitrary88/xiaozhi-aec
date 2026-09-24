@@ -21,9 +21,9 @@ private:
     Yt2228* yt2228_ = nullptr;
     esp_timer_handle_t manual_listening_timer_ = nullptr;
 
-    void InitializeShutdownPin() {
+    void InitializeGpio() {
         gpio_config_t io_conf = {
-            .pin_bit_mask = (1ULL << SHUTDOWN_GPIO),
+            .pin_bit_mask = (1ULL << SHUTDOWN_GPIO) | (1ULL << AUDIO_CODEC_PA_PIN),
             .mode = GPIO_MODE_OUTPUT,
             .pull_up_en = GPIO_PULLUP_DISABLE,
             .pull_down_en = GPIO_PULLDOWN_DISABLE,
@@ -31,6 +31,7 @@ private:
         };
         gpio_config(&io_conf);
         gpio_set_level(SHUTDOWN_GPIO, 0);
+        gpio_set_level(AUDIO_CODEC_PA_PIN, 0);
     }
 
     void InitializeCodecI2c() {
@@ -133,7 +134,7 @@ private:
 
 public:
     WHA103XiaoZhuiBoard() : boot_button_(BOOT_BUTTON_GPIO) {
-        InitializeShutdownPin();
+        InitializeGpio();
         InitializeCodecI2c();
         InitializeGuardTimer();
         InitializeButtons();
