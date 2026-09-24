@@ -134,6 +134,7 @@ private:
                 return;
             }
 
+            StartManualListeningGuardTimer();
             app.WakeWordInvoke("xiaozhi");
         });
         yt2228_->OnModeChanged([this](bool bluetooth_mode) {

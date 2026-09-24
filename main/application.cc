@@ -632,7 +632,7 @@ void Application::InitializeProtocol() {
                                 pending_speaking_to_idle_ = true;
                             }
                         } else {
-                            SetListeningMode(kListeningModeAutoStop);
+                            SetListeningMode(kListeningModeManualStop);
                         }
                     }
                 });
@@ -1184,11 +1184,7 @@ void Application::SetListeningMode(ListeningMode mode) {
 }
 
 ListeningMode Application::GetDefaultListeningMode() const {
-#if CONFIG_USE_WAKE_WORD_INTERRUPT_ONLY
-    return kListeningModeAutoStop;
-#else
-    return aec_mode_ == kAecOff ? kListeningModeAutoStop : kListeningModeRealtime;
-#endif
+    return kListeningModeManualStop;
 }
 
 void Application::Reboot() {

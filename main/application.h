@@ -136,7 +136,7 @@ private:
     EventGroupHandle_t event_group_ = nullptr;
     esp_timer_handle_t clock_timer_handle_ = nullptr;
     DeviceStateMachine state_machine_;
-    ListeningMode listening_mode_ = kListeningModeAutoStop;
+    ListeningMode listening_mode_ = kListeningModeManualStop;
     AecMode aec_mode_ = kAecOff;
     std::string last_error_message_;
     AudioService audio_service_;
