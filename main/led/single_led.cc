@@ -11,7 +11,8 @@
 #define BLINK_INFINITE -1
 
 
-SingleLed::SingleLed(gpio_num_t gpio) {
+SingleLed::SingleLed(gpio_num_t gpio, uint8_t default_brightness, uint8_t high_brightness, uint8_t low_brightness)
+    : default_brightness_(default_brightness), high_brightness_(high_brightness), low_brightness_(low_brightness) {
     if (gpio == GPIO_NUM_NC) {
         ESP_LOGW(TAG, "SingleLed initialized with GPIO_NUM_NC, LED will not function");
         return;
@@ -120,45 +121,51 @@ void SingleLed::OnBlinkTimer() {
 }
 
 
+void SingleLed::SetBrightness(uint8_t default_brightness, uint8_t high_brightness, uint8_t low_brightness) {
+    default_brightness_ = default_brightness;
+    high_brightness_ = high_brightness;
+    low_brightness_ = low_brightness;
+}
+
 void SingleLed::OnStateChanged() {
     auto& app = Application::GetInstance();
     auto device_state = app.GetDeviceState();
     switch (device_state) {
         case kDeviceStateStarting:
-            SetColor(0, 0, DEFAULT_BRIGHTNESS);
+            SetColor(0, 0, default_brightness_);
             StartContinuousBlink(100);
             break;
         case kDeviceStateWifiConfiguring:
-            SetColor(0, 0, DEFAULT_BRIGHTNESS);
+            SetColor(0, 0, default_brightness_);
             StartContinuousBlink(500);
             break;
         case kDeviceStateIdle:
             TurnOff();
             break;
         case kDeviceStateConnecting:
-            SetColor(0, 0, DEFAULT_BRIGHTNESS);
+            SetColor(0, 0, default_brightness_);
             TurnOn();
             break;
         case kDeviceStateListening:
         case kDeviceStateAudioTesting:
             if (app.IsVoiceDetected()) {
-                SetColor(HIGH_BRIGHTNESS, 0, 0);
+                SetColor(high_brightness_, 0, 0);
             } else {
-                SetColor(LOW_BRIGHTNESS, 0, 0);
+                SetColor(low_brightness_, 0, 0);
             }
             TurnOn();
             break;
         case kDeviceStateSpeaking:
         case kDeviceStateNotifying:
-            SetColor(0, DEFAULT_BRIGHTNESS, 0);
+            SetColor(0, default_brightness_, 0);
             TurnOn();
             break;
         case kDeviceStateUpgrading:
-            SetColor(0, DEFAULT_BRIGHTNESS, 0);
+            SetColor(0, default_brightness_, 0);
             StartContinuousBlink(100);
             break;
         case kDeviceStateActivating:
-            SetColor(0, DEFAULT_BRIGHTNESS, 0);
+            SetColor(0, default_brightness_, 0);
             StartContinuousBlink(500);
             break;
         default:

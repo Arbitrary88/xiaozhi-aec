@@ -159,7 +159,8 @@ public:
     }
 
     virtual Led* GetLed() override {
-        static SingleLed led(BUILTIN_LED_GPIO);
+        // 配置明亮指示灯 (150 ~ 200 范围：默认180，说话检测高亮200，聆听待命150)
+        static SingleLed led(BUILTIN_LED_GPIO, 180, 200, 150);
         return &led;
     }
 
