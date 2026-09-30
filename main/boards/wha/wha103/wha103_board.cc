@@ -75,8 +75,9 @@ private:
             .callback = [](void* arg) {
                 auto& app = Application::GetInstance();
                 if (app.GetDeviceState() == kDeviceStateListening) {
-                    ESP_LOGW(TAG, "手动聆听超时（60秒），自动结束并进入回复...");
-                    app.StopListening();
+                    // 超时不发 listen stop，避免服务端识别并回答
+                    ESP_LOGW(TAG, "手动聆听超时（60秒），放弃本次聆听并进入待机");
+                    app.ToggleChatState();
                 }
             },
             .arg = this,
