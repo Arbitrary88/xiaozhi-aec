@@ -1,7 +1,7 @@
 #include "wifi_board.h"
 #include "codecs/es8311_audio_codec.h"
 #include "display/display.h"
-#include "led/single_led.h"
+#include "wha103_red_led.h"
 #include "application.h"
 #include "button.h"
 #include "config.h"
@@ -161,8 +161,9 @@ public:
     }
 
     virtual Led* GetLed() override {
-        // 配置明亮指示灯 (150 ~ 200 范围：默认180，说话检测高亮200，聆听待命150)
-        static SingleLed led(BUILTIN_LED_GPIO, 180, 200, 150);
+        // 单色红色 LED（GPIO0 + LEDC PWM），单色无颜色通道，状态用亮度与闪烁节奏表达
+        // 若硬件为共阳接法（GPIO 低电平点亮），改成 static Wha103RedLed led(BUILTIN_LED_GPIO, true);
+        static Wha103RedLed led(BUILTIN_LED_GPIO);
         return &led;
     }
 
