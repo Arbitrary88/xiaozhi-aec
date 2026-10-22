@@ -1,7 +1,7 @@
 #ifndef _WHA103_RED_LED_H_
 #define _WHA103_RED_LED_H_
 
-#include "led.h"
+#include "led/led.h"
 
 #include <driver/gpio.h>
 #include <driver/ledc.h>
